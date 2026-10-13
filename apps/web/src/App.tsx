@@ -157,7 +157,7 @@ export default function App() {
           </div>
           <label className="date-control">
             <span>Business date</span>
-            <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+            <input type="date" value={date} onChange={(event) => setDate(event.target.value)} disabled={submitting} />
           </label>
         </section>
 
@@ -170,14 +170,14 @@ export default function App() {
           <article className="summary-card">
             <div className="summary-card-top"><span>Transactions</span><span className="card-icon count-icon">#</span></div>
             <strong>{summary ? wholeNumber.format(summary.transaction_count) : "—"}</strong>
-            <span className="card-caption">Completed sales today</span>
+            <span className="card-caption">Completed transactions for this business day</span>
           </article>
         </section>
 
         <section className="entry-card">
           <div className="section-intro">
             <div className="section-icon add-icon" aria-hidden="true">+</div>
-            <div><h2>Record a sale</h2><p>Add a completed transaction to today’s log.</p></div>
+            <div><h2>Record a sale</h2><p>{isToday ? "Add a completed transaction to today’s log." : "Sales can only be recorded on the current business date."}</p></div>
           </div>
           {!isToday && <p className="message history-message">Sales can only be recorded for today. Choose today’s date to add a transaction.</p>}
           <form className="sale-form" onSubmit={handleSubmit} noValidate>
@@ -229,7 +229,7 @@ export default function App() {
               </tbody>
             </table>
           </div>
-          <p className="table-footnote">All times shown in West Africa Time (WAT).</p>
+          <p className="table-footnote">Times shown in {businessTimezone}.</p>
         </section>
       </main>
       <footer className="footer"><span>Daily Sales Log</span><span>Simple records. Clear numbers.</span></footer>
