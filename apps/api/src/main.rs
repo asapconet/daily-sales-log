@@ -80,8 +80,15 @@ fn date_bounds(date: NaiveDate, timezone: Tz) -> Result<(DateTime<Utc>, DateTime
 
 fn requested_date(raw: Option<String>, timezone: Tz) -> Result<NaiveDate, ApiError> {
     match raw {
-        Some(value) => NaiveDate::parse_from_str(&value, "%Y-%m-%d")
-            .map_err(|_| bad_request("date must use YYYY-MM-DD format")),
+        Some(value)
+            if value.len() == 10
+                && value.as_bytes().get(4) == Some(&b'-')
+                && value.as_bytes().get(7) == Some(&b'-') =>
+        {
+            NaiveDate::parse_from_str(&value, "%Y-%m-%d")
+                .map_err(|_| bad_request("date must use YYYY-MM-DD format"))
+        }
+        Some(_) => Err(bad_request("date must use YYYY-MM-DD format")),
         None => Ok(Utc::now().with_timezone(&timezone).date_naive()),
     }
 }
@@ -94,8 +101,10 @@ fn validate_sale(input: CreateSale) -> Result<(String, i64), ApiError> {
     if item_name.chars().count() > 120 {
         return Err(bad_request("Item name must be 120 characters or fewer"));
     }
-    if input.amount_kobo <= 0 {
-        return Err(bad_request("Amount must be greater than zero kobo"));
+    if input.amount_kobo <= 0 || input.amount_kobo > 9_007_199_254_740_991 {
+        return Err(bad_request(
+            "Amount must be between 1 and 9,007,199,254,740,991 kobo",
+        ));
     }
     Ok((item_name.to_owned(), input.amount_kobo))
 }
@@ -232,6 +241,10 @@ mod tests {
                 item_name: "Tea".into(),
                 amount_kobo: -1,
             },
+            CreateSale {
+                item_name: "Tea".into(),
+                amount_kobo: 9_007_199_254_740_992,
+            },
         ] {
             assert!(validate_sale(input).is_err());
         }
@@ -249,6 +262,7 @@ mod tests {
     #[test]
     fn rejects_malformed_business_dates() {
         assert!(requested_date(Some("13-10-2026".into()), chrono_tz::Africa::Lagos).is_err());
+        assert!(requested_date(Some("2026-1-13".into()), chrono_tz::Africa::Lagos).is_err());
         assert!(requested_date(Some("2026-02-30".into()), chrono_tz::Africa::Lagos).is_err());
     }
 }
