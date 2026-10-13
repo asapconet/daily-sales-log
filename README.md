@@ -18,21 +18,22 @@ A lightweight POS-style sales logger for recording transactions and reviewing da
 
 ## Local development
 
-Install Bun, Rust/Cargo, and Docker. Start the existing local PostgreSQL service, then install frontend dependencies:
+Install Bun, Rust/Cargo, and Docker. Start the existing local PostgreSQL service, install frontend dependencies, and create the root `.env` only if you do not already have one:
 
 ```sh
 docker compose up -d postgres
 bun install
+test -f .env || cp apps/api/.env.example .env
 ```
 
-Copy `apps/api/.env.example` to the repository root `.env` and set `DATABASE_URL` to the local database URL. Start the API and frontend in separate terminals:
+The example uses the Compose database at `localhost:5434`. The API loads the root `.env` when run from the repository root and applies migrations on startup. Start the API and frontend in separate terminals; if an older API is already using port `3000`, stop that process before restarting the API:
 
 ```sh
 bun run dev:api
 bun run dev:web
 ```
 
-The API listens on port `3000` by default. It applies SQLx migrations at startup. Vite proxies `/api` requests to the local API. Root scripts include `bun run test:api`, `bun run test:web`, and `bun run build:web`.
+The API listens on port `3000` by default. Vite development requests always use its `/api` proxy to `http://127.0.0.1:3000`, even if an ignored `apps/web/.env` has a different `VITE_API_BASE_URL`. Production builds continue to use `VITE_API_BASE_URL`. Root scripts include `bun run test:api`, `bun run test:web`, and `bun run build:web`.
 
 ## Environment variables
 
@@ -46,7 +47,7 @@ API variables (see `apps/api/.env.example`):
 | `FRONTEND_ORIGIN` | No | `http://localhost:5173` | Exact origin allowed by API CORS. |
 | `BUSINESS_TIMEZONE` | No | `Africa/Lagos` | IANA timezone defining business-day boundaries. |
 
-Frontend variables (see `apps/web/.env.example`):
+Frontend build variables (see `apps/web/.env.example`):
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
@@ -108,12 +109,13 @@ bun run build:web
 docker build -f apps/api/Dockerfile -t daily-sales-log-api .
 ```
 
-Results for this refactor:
+Results for this change:
 
-- **Passed:** frozen Bun install, Rust formatting, API compilation, all 5 API unit tests, frontend running-total test (1 passed), and frontend TypeScript/production build.
-- **Not completed:** Docker build. Docker was available, but pulling the Rust base image progressed too slowly, so the local build was canceled before completion.
-- **Not run:** database-backed HTTP/integration checks and GitHub Actions. Integration checks require a reachable PostgreSQL database; the workflow was not triggered because nothing was pushed.
-- **Not verified:** public Render/Neon deployment or production persistence.
+- **Passed:** Rust formatting, compilation and 5 API unit tests; frontend running-total test (1 passed), TypeScript check and production build. Bun frozen-lockfile install passed.
+- **Passed locally:** Compose PostgreSQL healthy on host port `5434`; `/health`; `POST /api/sales`; date-filtered list and daily summary through the local API/Vite proxy. The current API source also returned a successful all-time summary on temporary localhost port `3001`. One 100-kobo local smoke-test sale remains in the local database.
+- **Not completed:** Docker image build. Docker was available, but the Rust base-image download was too slow and the build was canceled.
+- **Not run:** GitHub Actions. No push was made.
+- **Not verified:** public Render/Neon deployment or production persistence. No production API/database was used for the local smoke test.
 
 ## Notes
 

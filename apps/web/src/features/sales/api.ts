@@ -1,6 +1,10 @@
 import type { AllTimeSummary, Sale, Summary } from "./types";
 
-const apiBase = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+// Local development always goes through Vite's /api proxy. This prevents a
+// developer's ignored .env from sending test sales to a hosted API.
+const apiBase = import.meta.env.DEV
+  ? ""
+  : (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBase}${path}`, {
