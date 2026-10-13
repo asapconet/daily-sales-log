@@ -88,22 +88,32 @@ docker build -f apps/api/Dockerfile -t daily-sales-log-api .
 
 The Rust unit tests cover input validation, integer totals, malformed dates, and `Africa/Lagos` boundaries. Database integration behavior requires a reachable PostgreSQL instance and is not covered by those unit tests.
 
-## Deployment and CI
+## Deployment configuration
 
-The repository includes a Render Blueprint (`render.yaml`), API Dockerfile, Neon-hosted PostgreSQL setup, and `.github/workflows/ci-cd.yml`. The workflow checks Rust formatting, compilation and tests, frontend running-total tests and build, and Docker image build. On pushes to `main`, its existing deploy job calls Render deploy hooks when these GitHub Actions secrets are configured:
-
-- `RENDER_API_DEPLOY_HOOK`
-- `RENDER_FRONTEND_DEPLOY_HOOK`
-
-Configure production `DATABASE_URL`, `FRONTEND_ORIGIN`, `VITE_API_BASE_URL`, and matching `BUSINESS_TIMEZONE` / `VITE_BUSINESS_TIMEZONE` in the hosting services. Create the Neon database, apply migrations (or let API startup apply them), configure the Render services and exact origins, then verify `/health` and a real sale in the public app. No deployment was performed for this refactor.
+The existing Render Blueprint (`render.yaml`), API Dockerfile, Neon configuration, and GitHub Actions workflow were inspected and retained. The workflow’s checks now also run the frontend running-total test. Its pre-existing hook-based Render deploy job for pushes to `main` was left unchanged and not invoked. No deployment credentials were requested, and no push or deployment was performed.
 
 **Live application URL:** not verified.
 
-## Verification status
+## Local verification
 
-**Implemented and locally verified:** three frontend routes, Tailwind production build, all-time and recent-sale API query code, daily listing and summary code, Rust unit tests, chronological running-total test, and CI workflow checks.
+Run the available checks from the repository root:
 
-**Not verified here:** database-backed HTTP flow, public Render/Neon deployment, and GitHub Actions execution. Those checks require the configured PostgreSQL and hosting accounts/secrets.
+```sh
+bun install --frozen-lockfile
+cargo fmt --manifest-path apps/api/Cargo.toml --all -- --check
+cargo check --manifest-path apps/api/Cargo.toml --locked
+cargo test --manifest-path apps/api/Cargo.toml --locked
+bun run test:web
+bun run build:web
+docker build -f apps/api/Dockerfile -t daily-sales-log-api .
+```
+
+Results for this refactor:
+
+- **Passed:** frozen Bun install, Rust formatting, API compilation, all 5 API unit tests, frontend running-total test (1 passed), and frontend TypeScript/production build.
+- **Not completed:** Docker build. Docker was available, but pulling the Rust base image progressed too slowly, so the local build was canceled before completion.
+- **Not run:** database-backed HTTP/integration checks and GitHub Actions. Integration checks require a reachable PostgreSQL database; the workflow was not triggered because nothing was pushed.
+- **Not verified:** public Render/Neon deployment or production persistence.
 
 ## Notes
 
