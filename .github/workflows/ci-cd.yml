@@ -1,0 +1,72 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-sales-log-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Test and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check Rust formatting
+        run: cargo fmt --manifest-path apps/api/Cargo.toml --all -- --check
+
+      - name: Check API
+        run: cargo check --manifest-path apps/api/Cargo.toml --locked
+
+      - name: Test API
+        run: cargo test --manifest-path apps/api/Cargo.toml --locked
+
+      - name: Build frontend
+        run: bun run build:web
+
+      - name: Build API Docker image
+        run: docker build -f apps/api/Dockerfile -t daily-sales-log-api:ci .
+
+  deploy:
+    name: Deploy to Render
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy API
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: |
+          test -n "$DEPLOY_HOOK"
+          curl --fail --silent --show-error \
+            --request POST "$DEPLOY_HOOK"
+
+      - name: Deploy frontend
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
+        run: |
+          test -n "$DEPLOY_HOOK"
+          curl --fail --silent --show-error \
+            --request POST "$DEPLOY_HOOK"
