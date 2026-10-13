@@ -4,7 +4,7 @@ import SalesSummary from "../components/SalesSummary";
 import SalesTable from "../components/SalesTable";
 import { getSales, getSummary } from "../api";
 import type { Sale, Summary } from "../types";
-import { businessToday, businessTimezone, formatBusinessDate, formatNaira, wholeNumber } from "../../../lib/formatters";
+import { businessToday, businessLocationLabel, formatBusinessDate, formatNaira, wholeNumber } from "../../../lib/formatters";
 
 export default function RecordSalePage() {
   const date = businessToday();
@@ -32,7 +32,7 @@ export default function RecordSalePage() {
   }
 
   return <div className="space-y-7">
-    <div><p className="text-xs font-semibold uppercase tracking-widest text-emerald-800">Daily operations</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Sales entry</h1><p className="mt-1 text-sm text-slate-500">Current session · {formatBusinessDate(date)} · {businessTimezone}</p></div>
+    <div><p className="text-xs font-semibold uppercase tracking-widest text-emerald-800">Daily operations</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Sales entry</h1><p className="mt-1 text-sm text-slate-500">Current session · {formatBusinessDate(date)} · {businessLocationLabel}</p></div>
     <SaleForm onSaved={refreshAfterSave} />
     {error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
     <SalesSummary items={[

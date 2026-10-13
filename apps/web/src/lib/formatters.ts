@@ -1,4 +1,5 @@
 export const businessTimezone = import.meta.env.VITE_BUSINESS_TIMEZONE || "Africa/Lagos";
+export const businessLocationLabel = "Abuja, Nigeria · WAT";
 const currency = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
 export const wholeNumber = new Intl.NumberFormat("en-NG");
 
