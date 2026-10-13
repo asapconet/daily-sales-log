@@ -1,0 +1,11 @@
+{
+  "name": "daily-sales-log",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev:web": "bun --cwd apps/web dev",
+    "build:web": "bun --cwd apps/web run build",
+    "dev:api": "cargo run --manifest-path apps/api/Cargo.toml",
+    "test:api": "cargo test --manifest-path apps/api/Cargo.toml"
+  }
+}
