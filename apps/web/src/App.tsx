@@ -145,7 +145,7 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">S</span>
           <span>Daily Sales Log</span>
         </a>
-        <span className="timezone-label"><span className="live-dot" /> Lagos business day</span>
+        <span className="timezone-label"><span className="live-dot" /> Guzape business day</span>
       </header>
 
       <main className="content">
