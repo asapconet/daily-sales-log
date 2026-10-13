@@ -110,7 +110,9 @@ fn validate_sale(input: CreateSale) -> Result<(String, i64), ApiError> {
 }
 
 fn total_kobo(mut amounts: impl Iterator<Item = i64>) -> Option<i64> {
-    amounts.try_fold(0_i64, i64::checked_add)
+    amounts
+        .try_fold(0_i64, i64::checked_add)
+        .filter(|total| *total <= 9_007_199_254_740_991)
 }
 
 async fn health(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Value>, ApiError> {
@@ -271,6 +273,7 @@ mod tests {
         );
         assert_eq!(total_kobo([].into_iter()), Some(0));
         assert_eq!(total_kobo([i64::MAX, 1].into_iter()), None);
+        assert_eq!(total_kobo([9_007_199_254_740_991, 1].into_iter()), None);
     }
 
     #[test]
