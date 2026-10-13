@@ -132,9 +132,7 @@ export default function DashboardPage() {
 							: todayLoading
 								? "Loading…"
 								: "Unavailable",
-						hint:
-							todayError ||
-							`Business day · ${businessToday()} · NGN`,
+						hint: todayError || `Business day · ${businessToday()} · NGN`,
 					},
 				]}
 			/>
@@ -144,9 +142,7 @@ export default function DashboardPage() {
 					role="alert"
 					className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
 				>
-					{allTimeError && (
-						<p>All-time summary: {allTimeError}</p>
-					)}
+					{allTimeError && <p>All-time summary: {allTimeError}</p>}
 					{todayError && <p>Today’s summary: {todayError}</p>}
 				</div>
 			)}

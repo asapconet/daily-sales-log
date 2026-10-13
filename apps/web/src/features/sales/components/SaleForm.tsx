@@ -85,6 +85,7 @@ export default function SaleForm({
 					</span>
 				</label>
 				<button
+					type="submit"
 					disabled={busy}
 					className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-800 px-5 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-70"
 				>
