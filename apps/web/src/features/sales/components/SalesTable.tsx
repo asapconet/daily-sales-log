@@ -1,12 +1,11 @@
 import type { Sale } from "../types";
+import { withRunningTotals } from "../runningTotals";
 import { formatDateTime, formatNaira } from "../../../lib/formatters";
 
 type Props = { sales: Sale[]; loading?: boolean; error?: string; emptyMessage?: string; recent?: boolean };
 
 export default function SalesTable({ sales, loading = false, error = "", emptyMessage = "No transactions for this business day.", recent = false }: Props) {
-  let running = 0;
-  const chronological = [...sales].sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || a.id.localeCompare(b.id));
-  const rows = chronological.map((sale) => { running += sale.amount_kobo; return { ...sale, runningTotal: running }; });
+  const rows = withRunningTotals(sales);
   if (recent) rows.reverse();
   return <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
     <table className="w-full min-w-[620px] text-left text-sm">
