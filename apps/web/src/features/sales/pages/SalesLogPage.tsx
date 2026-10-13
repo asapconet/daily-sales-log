@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getSales, getSummary } from "../api";
 import type { Sale, Summary } from "../types";
 import SalesTable from "../components/SalesTable";
-import { businessToday, formatBusinessDate, formatNaira, wholeNumber } from "../../../lib/formatters";
+import { businessToday, businessTimezone, formatBusinessDate, formatNaira, wholeNumber } from "../../../lib/formatters";
 
 export default function SalesLogPage() {
   const [date, setDate] = useState(businessToday);
@@ -28,6 +28,6 @@ export default function SalesLogPage() {
     </div>
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3"><div><p className="text-xs text-slate-500">Selected business day</p><p className="mt-0.5 font-medium text-slate-900">{formatBusinessDate(date)}</p></div><div className="flex gap-6 text-right"><div><p className="text-xs text-slate-500">Revenue · NGN</p><p className="font-semibold text-slate-900">{summary ? formatNaira(summary.total_kobo) : "—"}</p></div><div><p className="text-xs text-slate-500">Transactions</p><p className="font-semibold text-slate-900">{summary ? wholeNumber.format(summary.transaction_count) : "—"}</p></div></div></div>
     {error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
-    <section className="space-y-3"><div><h2 className="font-semibold text-slate-900">Transactions</h2><p className="mt-1 text-sm text-slate-500">Newest first. Running totals reflect the original chronological order. Times use Africa/Lagos.</p></div><SalesTable sales={sales} recent loading={loading} error={error} emptyMessage="No sales were recorded on this business date." /></section>
+    <section className="space-y-3"><div><h2 className="font-semibold text-slate-900">Transactions</h2><p className="mt-1 text-sm text-slate-500">Newest first. Running totals reflect the original chronological order. Times use {businessTimezone}.</p></div><SalesTable sales={sales} recent loading={loading} error={error} emptyMessage="No sales were recorded on this business date." /></section>
   </div>;
 }
