@@ -90,7 +90,7 @@ The Rust unit tests cover input validation, integer totals, malformed dates, and
 
 ## Deployment and CI
 
-The repository includes a Render Blueprint (`render.yaml`), API Dockerfile, Neon-hosted PostgreSQL setup, and `.github/workflows/ci-cd.yml`. The workflow checks Rust formatting, compilation and tests, frontend build, and Docker image build. On pushes to `main`, its existing deploy job calls Render deploy hooks when these GitHub Actions secrets are configured:
+The repository includes a Render Blueprint (`render.yaml`), API Dockerfile, Neon-hosted PostgreSQL setup, and `.github/workflows/ci-cd.yml`. The workflow checks Rust formatting, compilation and tests, frontend running-total tests and build, and Docker image build. On pushes to `main`, its existing deploy job calls Render deploy hooks when these GitHub Actions secrets are configured:
 
 - `RENDER_API_DEPLOY_HOOK`
 - `RENDER_FRONTEND_DEPLOY_HOOK`
