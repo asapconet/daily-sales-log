@@ -1,12 +1,21 @@
 {
-  "name": "daily-sales-log",
-  "private": true,
-  "workspaces": ["apps/web"],
-  "scripts": {
-    "dev:web": "bun run --cwd apps/web dev",
-    "build:web": "bun run --cwd apps/web build",
-    "dev:api": "cargo run --manifest-path apps/api/Cargo.toml",
-    "test:api": "cargo test --manifest-path apps/api/Cargo.toml",
-    "test:web": "bun test apps/web/tests"
-  }
+	"name": "daily-sales-log",
+	"private": true,
+	"workspaces": [
+		"apps/web"
+	],
+	"scripts": {
+		"dev:web": "bun run --cwd apps/web dev",
+		"build:web": "bun run --cwd apps/web build",
+		"dev:api": "cargo run --manifest-path apps/api/Cargo.toml",
+		"test:api": "cargo test --manifest-path apps/api/Cargo.toml",
+		"test:web": "bun test apps/web/tests",
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome lint .",
+		"check": "biome check ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.15"
+	}
 }
