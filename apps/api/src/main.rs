@@ -109,6 +109,10 @@ fn validate_sale(input: CreateSale) -> Result<(String, i64), ApiError> {
     Ok((item_name.to_owned(), input.amount_kobo))
 }
 
+fn total_kobo(mut amounts: impl Iterator<Item = i64>) -> Option<i64> {
+    amounts.try_fold(0_i64, i64::checked_add)
+}
+
 async fn health(State(state): State<Arc<AppState>>) -> Result<Json<serde_json::Value>, ApiError> {
     sqlx::query("SELECT 1")
         .execute(&state.pool)
@@ -157,18 +161,27 @@ async fn sales_summary(
 ) -> Result<Json<Summary>, ApiError> {
     let date = requested_date(query.date, state.timezone)?;
     let (start, end) = date_bounds(date, state.timezone)?;
-    let (total, count) = sqlx::query_as::<_, (i64, i64)>(
-        "SELECT COALESCE(SUM(amount_kobo), 0)::BIGINT, COUNT(*)::BIGINT FROM sales WHERE created_at >= $1 AND created_at < $2",
+    let amounts = sqlx::query_as::<_, (i64,)>(
+        "SELECT amount_kobo FROM sales WHERE created_at >= $1 AND created_at < $2",
     )
     .bind(start)
     .bind(end)
-    .fetch_one(&state.pool)
+    .fetch_all(&state.pool)
     .await
-    .map_err(|_| ApiError(StatusCode::INTERNAL_SERVER_ERROR, "Could not retrieve sales summary"))?;
+    .map_err(|_| {
+        ApiError(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Could not retrieve sales summary",
+        )
+    })?;
+    let total = total_kobo(amounts.iter().map(|(amount,)| *amount)).ok_or(ApiError(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "Daily total exceeds the supported range",
+    ))?;
     Ok(Json(Summary {
         date: date.to_string(),
         total_kobo: total,
-        transaction_count: count,
+        transaction_count: i64::try_from(amounts.len()).unwrap_or(i64::MAX),
     }))
 }
 
@@ -248,6 +261,16 @@ mod tests {
         ] {
             assert!(validate_sale(input).is_err());
         }
+    }
+
+    #[test]
+    fn calculates_daily_totals_with_integer_arithmetic() {
+        assert_eq!(
+            total_kobo([100_000, 50_000, 200_000].into_iter()),
+            Some(350_000)
+        );
+        assert_eq!(total_kobo([].into_iter()), Some(0));
+        assert_eq!(total_kobo([i64::MAX, 1].into_iter()), None);
     }
 
     #[test]
