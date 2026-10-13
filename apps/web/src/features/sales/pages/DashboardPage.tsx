@@ -14,34 +14,69 @@ export default function DashboardPage() {
 	const [allTime, setAllTime] = useState<AllTimeSummary | null>(null);
 	const [today, setToday] = useState<Summary | null>(null);
 	const [sales, setSales] = useState<Sale[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState("");
+
+	const [allTimeLoading, setAllTimeLoading] = useState(true);
+	const [todayLoading, setTodayLoading] = useState(true);
+	const [salesLoading, setSalesLoading] = useState(true);
+
+	const [allTimeError, setAllTimeError] = useState("");
+	const [todayError, setTodayError] = useState("");
+	const [salesError, setSalesError] = useState("");
 
 	useEffect(() => {
 		let active = true;
-		Promise.all([
-			getAllTimeSummary(),
-			getRecentSales(),
-			getSummary(businessToday()),
-		])
-			.then(([summary, recent, day]) => {
-				if (active) {
-					setAllTime(summary);
-					setSales(recent);
-					setToday(day);
-				}
+
+		void getAllTimeSummary()
+			.then((summary) => {
+				if (active) setAllTime(summary);
 			})
 			.catch((reason: unknown) => {
-				if (active)
-					setError(
+				if (active) {
+					setAllTimeError(
 						reason instanceof Error
 							? reason.message
-							: "Could not load dashboard.",
+							: "Could not load all-time summary.",
 					);
+				}
 			})
 			.finally(() => {
-				if (active) setLoading(false);
+				if (active) setAllTimeLoading(false);
 			});
+
+		void getRecentSales()
+			.then((recent) => {
+				if (active) setSales(recent);
+			})
+			.catch((reason: unknown) => {
+				if (active) {
+					setSalesError(
+						reason instanceof Error
+							? reason.message
+							: "Could not load recent transactions.",
+					);
+				}
+			})
+			.finally(() => {
+				if (active) setSalesLoading(false);
+			});
+
+		void getSummary(businessToday())
+			.then((summary) => {
+				if (active) setToday(summary);
+			})
+			.catch((reason: unknown) => {
+				if (active) {
+					setTodayError(
+						reason instanceof Error
+							? reason.message
+							: "Could not load today's summary.",
+					);
+				}
+			})
+			.finally(() => {
+				if (active) setTodayLoading(false);
+			});
+
 		return () => {
 			active = false;
 		};
@@ -61,6 +96,7 @@ export default function DashboardPage() {
 						Business-wide performance across all recorded sales.
 					</p>
 				</div>
+
 				<Link
 					to="/sales/new"
 					className="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900"
@@ -68,45 +104,53 @@ export default function DashboardPage() {
 					+ Record a sale
 				</Link>
 			</div>
-			{error && (
-				<p
-					role="alert"
-					className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
-				>
-					{error}
-				</p>
-			)}
+
 			<SalesSummary
 				items={[
 					{
 						label: "All-time revenue",
 						value: allTime
 							? formatNaira(allTime.total_kobo)
-							: loading
+							: allTimeLoading
 								? "Loading…"
-								: "—",
-						hint: "All recorded sales · NGN",
+								: "Unavailable",
+						hint: allTimeError || "All recorded sales · NGN",
 					},
 					{
 						label: "All-time transactions",
 						value: allTime
 							? wholeNumber.format(allTime.transaction_count)
-							: loading
+							: allTimeLoading
 								? "Loading…"
-								: "—",
-						hint: "Across all business days",
+								: "Unavailable",
+						hint: allTimeError || "Across all business days",
 					},
 					{
 						label: "Today’s revenue",
 						value: today
 							? formatNaira(today.total_kobo)
-							: loading
+							: todayLoading
 								? "Loading…"
-								: "—",
-						hint: `Business day · ${businessToday()} · NGN`,
+								: "Unavailable",
+						hint:
+							todayError ||
+							`Business day · ${businessToday()} · NGN`,
 					},
 				]}
 			/>
+
+			{(allTimeError || todayError) && (
+				<div
+					role="alert"
+					className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+				>
+					{allTimeError && (
+						<p>All-time summary: {allTimeError}</p>
+					)}
+					{todayError && <p>Today’s summary: {todayError}</p>}
+				</div>
+			)}
+
 			<section className="space-y-3">
 				<div className="flex items-end justify-between gap-3">
 					<div>
@@ -117,6 +161,7 @@ export default function DashboardPage() {
 							Latest activity from all business days.
 						</p>
 					</div>
+
 					<Link
 						to="/sales"
 						className="text-sm font-medium text-emerald-800 hover:underline"
@@ -124,11 +169,12 @@ export default function DashboardPage() {
 						View sales log →
 					</Link>
 				</div>
+
 				<SalesTable
 					sales={sales}
 					recent
-					loading={loading}
-					error={error}
+					loading={salesLoading}
+					error={salesError}
 					emptyMessage="No sales have been recorded yet."
 				/>
 			</section>
