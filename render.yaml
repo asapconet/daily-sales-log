@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: opsuite-daily-sales-log-api
+    name: daily-sales-log
     runtime: docker
     plan: 0.5c-512mb
     region: frankfurt
@@ -16,7 +16,7 @@ services:
         value: Africa/Lagos
 
   - type: web
-    name: opsuite-daily-sales-log
+    name: daily-sales-log-fe
     runtime: static
     buildCommand: bun install --frozen-lockfile && bun run build:web
     staticPublishPath: ./apps/web/dist
@@ -26,6 +26,6 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://opsuite-daily-sales-log-api.onrender.com
+        value: https://daily-sales-log.onrender.com
       - key: VITE_BUSINESS_TIMEZONE
         value: Africa/Lagos
